@@ -1,0 +1,74 @@
+###############################################################################
+# APACHE2 'pandap.net' CONFIG
+###############################################################################
+
+#------------------------------------------------------------------------------
+# Globals
+#------------------------------------------------------------------------------
+
+ServerName  pandap.net
+ServerAdmin webmaster@pandap.net
+ServerSignature On
+
+AddType text/html        .mhtml
+AddType application/json .json
+
+AddDefaultCharset utf-8
+
+DirectoryIndex index.html index.mhtml
+
+#------------------------------------------------------------------------------
+# Logging
+#------------------------------------------------------------------------------
+
+# Possible values include: debug info notice warn error crit alert emerg
+LogLevel notice
+
+ErrorLog  /srv/www/pandap.net/log/error.log
+CustomLog /srv/www/pandap.net/log/access.log combined
+
+#------------------------------------------------------------------------------
+# Dir confs...
+#------------------------------------------------------------------------------
+
+DocumentRoot /srv/www/pandap.net/html
+ErrorDocument 404 /error/missing.html
+ErrorDocument 500 /error/realbooboo.html
+
+PerlModule Bundle::Apache2
+PerlModule Apache2::Request
+PerlModule CGI
+PerlModule CGI::Cookie
+
+PerlOptions  +Parent
+PerlSwitches -I/srv/www/pandap.net/lib
+
+<Directory />
+  Options FollowSymLinks
+  AllowOverride All
+</Directory>
+
+<Directory /srv/www/pandap.net/html>
+  Options Indexes FollowSymLinks MultiViews
+  AllowOverride None
+  Order allow,deny
+  allow from all
+
+  <FilesMatch (^autohandler.*|^dhandler.*|\.comp)$>
+    SetHandler None
+    Order deny,allow
+    Deny from all
+  </FilesMatch>
+
+  <FilesMatch (\.html|\.mhtml|\.json)$>
+    SetHandler perl-script
+    PerlResponsehandler Pandap::ApacheHandler
+  </FilesMatch>
+
+  RedirectMatch ^/$ /portal/
+</Directory>
+
+ErrorDocument 404 /missing.html
+
+
+

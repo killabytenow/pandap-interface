@@ -11,20 +11,6 @@
 
 BEGIN;
 
--- SESSION MANAGEMENT ---------------------------------------------------------
-
-CREATE TABLE sessions (
-  id          CHARACTER(32) NOT NULL PRIMARY KEY,
-  a_session   TEXT,
-  mod_time    TIMESTAMP DEFAULT now()
-);
-
-CREATE OR REPLACE FUNCTION sessions_mod() RETURNS TRIGGER
-  LANGUAGE plpgsql AS 'BEGIN NEW.mod_time:=now(); RETURN NEW; END;';
-
-CREATE TRIGGER sessions_mod_trigger
-  BEFORE UPDATE ON sessions FOR EACH ROW EXECUTE PROCEDURE sessions_mod();
-
 -- DOMAINS --------------------------------------------------------------------
 CREATE TABLE domains (
     id            SERIAL PRIMARY KEY,
@@ -54,7 +40,7 @@ CREATE TABLE users (
 
     password    VARCHAR(64),
     blocked     BOOLEAN DEFAULT FALSE,
-    ulevel	INTEGER NOT NULL DEFAULT 0,
+    ulevel      INTEGER NOT NULL DEFAULT 0,
     	-- ulevel 0 => only modifies personal data
 	-- ulevel 1 => only modifies general data in domain
 	-- ulevel 2 => only modifies privileged data in domain
@@ -90,5 +76,32 @@ CREATE TABLE devices (
 --INSERT INTO ano_status ( key ) VALUES ( 'pub_ano_current' );
 --INSERT INTO ano_status ( key ) VALUES ( 'upurl_pid_lock' );
 --INSERT INTO ano_status ( key ) VALUES ( 'upurl_enabled' );
+
+-- SESSION MANAGEMENT ---------------------------------------------------------
+
+CREATE TABLE sessions (
+	id		CHARACTER(32) NOT NULL PRIMARY KEY,
+	a_session	TEXT,
+	mod_time	TIMESTAMP DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION sessions_mod() RETURNS TRIGGER LANGUAGE plpgsql AS
+'
+	BEGIN
+		NEW.mod_time:=now();
+		RETURN NEW;
+	END;
+';
+
+CREATE TRIGGER sessions_mod_trigger
+	BEFORE UPDATE ON sessions FOR EACH ROW EXECUTE PROCEDURE sessions_mod();
+
+CREATE TABLE tokens (
+	id		CHARACTER(32) NOT NULL PRIMARY KEY,
+	domain_id	INTEGER NOT NULL REFERENCES domains(id),
+	user_name	VARCHAR(32) NOT NULL UNIQUE,
+
+	FOREIGN KEY (domain_id, user_name) REFERENCES users(domain_id, name) ON DELETE CASCADE
+);
 
 COMMIT;
