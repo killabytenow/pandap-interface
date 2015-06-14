@@ -1,0 +1,92 @@
+<%args>
+	$domain   => undef
+	$username => undef
+	$password => undef
+	$token    => undef
+	$session
+</%args>
+<%init>
+	my ($sth, $user, $cookie);
+
+	%session = ( );
+
+	eval {
+		# recover user using creds or token
+		if(defined($token)) {
+			die { code => 1, msg => "Bad token login" }
+				if(defined($domain)
+				|| defined($username)
+				|| defined($password)
+				|| !$session);
+			$sth = $dbh->prepare(
+				"SELECT u.*
+				FROM users u
+					INNER JOIN domains d ON u.domain_id = d.id
+				WHERE d.name = ?
+					AND NOT d.disabled
+					AND now() > d.valid_since
+					AND now() <= d.valid_until
+					AND u.name = ? AND u.password = ?
+					AND NOT u.blocked");
+			$sth->execute($domain, $username, sha256_hex($username . $password));
+		} else {
+			$sth = $dbh->prepare(
+				"SELECT u.*
+				FROM tokens t, users u
+					INNER JOIN domains d ON u.domain_id = d.id
+				WHERE t.id = ?
+					AND u.name = t.user_name
+					AND d.id = t.domain_id
+					AND NOT d.disabled
+					AND now() > d.valid_since
+					AND now() <= d.valid_until
+					AND NOT u.blocked");
+			$sth->execute($token);
+		}
+
+		# fetch result
+		$user = $sth->fetchrow_hashref;
+		die { code => 1, msg => "Bad login" }
+			if(!$user);
+
+		# tie session and send the new session information
+		if($session) {
+			tie %HTML::Mason::Commands::session,
+				'Apache::Session::Postgres',
+				undef,
+				{
+					Handle => $HTML::Mason::Commands::sdbh,
+					Commit => 1
+				};
+			$cookie = Apache2::Cookie->new($r,
+					-name     => 'PA_ID',
+					-value    => $HTML::Mason::Commands::session{_session_id},
+					-path     => '/',
+					httponly  => 1,
+					secure    => 1,
+				);
+			$cookie->bake($r);
+		} else {
+			my ($fh, $random_data);
+
+			open($fh, "<", "/dev/urandom")
+				or die { code => 9001, msg => "Cannot open random device" };
+			read($fh, $random_data, 100);
+			$session{_token_id} = sha1_hex($random_data);
+
+			$dbh->do("INSERT INTO tokens (id, domain_id, user_name) VALUES (?,?,?)",
+				undef, $session{_token_id}, $user->{domain_id}, $user->{name});
+		}
+
+		# update session info
+		$session{logged}   = 1;
+		$session{username} = $user->{name};
+
+		$dbh->commit;
+		1;
+	} or do {
+		my $e = $@;
+		$dbh->rollback;
+		die $@;
+	};
+</%init>

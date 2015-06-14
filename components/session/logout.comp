@@ -1,0 +1,32 @@
+<%init>
+	my ($sth, $user, $cookie);
+
+	eval {
+		if(exists($session{_session_id})) {
+			# delete session from db
+			$dbh->do("DELETE FROM sessions WHERE id = ?", undef, $session{_session_id});
+
+			# cleanup session info
+			$cookie = Apache2::Cookie->new($r,
+					-name     => 'PA_ID',
+					-value    => "",
+					-path     => '/',
+					httponly  => 1,
+					secure    => 1,
+				);
+			$cookie->bake($r);
+		}
+
+		if(exists($session{_token_id})) {
+			# delete token from database
+			$dbh->do("DELETE FROM tokens WHERE id = ?", undef, $session{_token_id});
+		}
+
+		# clean session info
+		%session = ( );
+	} or do {
+		my $e = $@;
+		$dbh->rollback;
+		die $@;
+	};
+</%init>
