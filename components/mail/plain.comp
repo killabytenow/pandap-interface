@@ -1,0 +1,26 @@
+<%args>
+	$from
+	$to
+	$subject
+	$txt
+	$replyto => undef
+</%args>
+<%init>
+	my ($date);
+
+	# Get date in rfc-822
+	$date = `date --rfc-822`;
+	chomp($date);
+
+	# Build MIME message
+	return MIME::Entity->build(
+		'Type'       => "text/plain",
+		'Charset'    => "UTF-8",
+		'From'       => $from,
+		'Reply-To'   => !defined($replyto) ? $from : $replyto,
+		'To'         => $to,
+		'Subject'    => $subject,
+		'Date'       => $date,
+		'Message-ID' => sprintf("<mthml-%d\@pandap>", int(rand(1000000))),
+		'Data'       => $txt);
+</%init>
