@@ -1,0 +1,11 @@
+<%args>
+	$domain_id
+	$username
+	$email
+	$ulevel => 0
+</%args>
+<%init>
+	$dbh->do("INSERT INTO users (domain_id, name, email, ulevel) VALUES (?,?,?,?)",
+		undef, $domain_id, $username, $email, $ulevel);
+	#die { code => 1, msg => "Cannot create this user." }
+</%init>

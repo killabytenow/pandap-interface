@@ -1,0 +1,27 @@
+<%args>
+	$domain_id
+	$username => undef
+	$email    => undef
+	$check    => 1
+</%args>
+<%init>
+	my ($sth, $u);
+
+	Pandap::Exception->throw(error => "Must pass 'username' or 'email'")
+		if(!defined($username) && !defined($email));
+
+	$sth = $dbh->prepare(
+		sprintf q{
+			SELECT *,
+				(NOT blocked AND badtries < 5) AS available
+			FROM users
+			WHERE domain_id = ? AND %s = ?
+		}, defined($username) ? "name" : "email");
+	$sth->execute($domain_id, defined($username) ? $username : $email);
+
+	$u = $sth->fetchrow_hashref;
+	Pandap::UserException->throw(error => "Bad user")
+		if($check && (!$u || !$u->{available}));
+
+	return $u;
+</%init>

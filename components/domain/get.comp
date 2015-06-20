@@ -1,0 +1,27 @@
+<%args>
+	$name  => undef
+	$id    => undef
+	$check => 1
+</%args>
+<%init>
+	my ($sth, $d);
+
+	Pandap::Exception->throw(error => "Must pass 'name' or 'id'")
+		if(!defined($name) && !defined($id));
+
+	$sth = $dbh->prepare(
+		sprintf q{
+			SELECT *,
+				(now() < valid_since OR now() > valid_until) AS expired,
+				(now() >= valid_since AND now() <= valid_until AND NOT disabled) AS available
+			FROM domains
+			WHERE %s = ?
+			}, defined($name) ? "name" : "id");
+	$sth->execute(defined($name) ? $name : $id);
+
+	$d = $sth->fetchrow_hashref;
+	Pandap::DomainException->throw(error => "Bad domain")
+		if($check && (!$d || !$d->{available}));
+
+	return $d;
+</%init>

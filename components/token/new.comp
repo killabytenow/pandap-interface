@@ -1,0 +1,31 @@
+<%args>
+	$domain_id
+	$username
+	$one_time
+	$pass_reset
+</%args>
+<%init>
+	my ($d, $u, $fh, $random_data, $token_id);
+
+	# fetch domain
+	$d = $m->comp("/domain/get.comp", id => $domain_id);
+
+	# fetch user and check
+	$u = $m->comp("/user/get.comp",
+			domain_id => $domain_id,
+			username  => $username);
+
+	# create token
+	open($fh, "<", "/dev/urandom")
+		or Pandap::TokenException->throw("Cannot open random device");
+	read($fh, $random_data, 100);
+	$token_id = sha256_hex($random_data);
+	$dbh->do("INSERT INTO tokens
+			(id, domain_id, user_name, one_time, pass_reset)
+			VALUES (?,?,?,?,?)",
+		undef, $token_id, $domain_id, $username,
+		$one_time   ? "TRUE" : "FALSE",
+		$pass_reset ? "TRUE" : "FALSE");
+
+	return $token_id;
+</%init>

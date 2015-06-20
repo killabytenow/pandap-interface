@@ -1,0 +1,11 @@
+<%args>
+	$domain_id
+	$username
+</%args>
+<%init>
+	$dbh->do(q{
+			UPDATE users
+			SET badtries = badtries + 1
+			WHERE domain_id = ? AND name = ?
+		}, undef, $domain_id, $username);
+</%init>

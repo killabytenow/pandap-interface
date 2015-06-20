@@ -1,0 +1,19 @@
+<%args>
+	$domain
+	$username
+	$token
+</%args>
+You have requested being registered in the PandaAP network for the following
+service:
+
+	domain: <% $domain %>
+	username: <% $username %>
+
+Please click on the following link to confirm your account:
+
+	<% $config{baseurl} %>/confirm.html?token=<% $token |u %>
+
+If you have not requested this subscription, please ignore this message.
+
+	The PandAP bot
+	<% $config{baseurl} %>/about.html

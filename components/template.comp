@@ -1,0 +1,43 @@
+<%method header>
+<%args>
+	$title
+</%args>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><% $title |h %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/portal/js/jquery.mobile/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" href="/portal/js/jquery.mobile/jquery.mobile.theme-1.4.5.min.css">
+    <link rel="stylesheet" href="/portal/js/jquery.mobile/demos/_assets/css/jqm-demos.css">
+%#  <link rel="stylesheet" href="/style.css">
+    <script src="/portal/js/jquery-2.1.4.min.js"></script>
+    <script src="/portal/js/jquery.mobile/jquery.mobile-1.4.5.min.js"></script>
+
+    <!-- <script src="/portal/js/basic.js"></script> -->
+    <!-- <script src="/portal/js/json.js"></script> -->
+
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
+  </head>
+  <body>
+    <div data-role="page" class="jqm-page" data-quicklinks="true">
+      <div data-role="header" class="jqm-header">
+        <h1><a href="../" title="<% $title |h %>"><img src="../_assets/img/jquery-logo.png" alt="<% $title |h %>"></a></h1>
+        <a href="#nav-panel" class="jqm-navmenu-link ui-btn-left" data-icon="bars" data-iconpos="notext">Menu</a>
+%#      <p><span class="jqm-version"></span> Demos</p>
+%#      <a href="#" class="ui-btn ui-btn-icon-notext ui-corner-all ui-icon-bars ui-nodisc-icon ui-alt-icon">Menu</a>
+%#      <a href="#" class="jqm-search-link ui-btn ui-btn-icon-notext ui-corner-all ui-icon-search ui-nodisc-icon ui-alt-icon ui-btn-right">Search</a>
+      </div><!-- /header -->
+
+      <div role="main" class="ui-content jqm-content jqm-fullwidth">
+</%method>
+<%method footer>
+      </div><!-- /content -->
+      <div>
+        <h4>footer</h4>
+      </div><!-- /footer -->
+    </div><!-- /page -->
+  </body>
+</html>
+</%method>

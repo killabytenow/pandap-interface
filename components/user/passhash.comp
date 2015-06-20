@@ -1,0 +1,11 @@
+<%args>
+	$domain_id
+	$username
+	$password
+</%args>
+<%init>
+	my $h = sha256_hex($domain_id . $username . $password);
+	logmsg("Password(%s . %s . %s) = %s",
+		$domain_id, $username, $password, $h);
+	return $h;
+</%init>

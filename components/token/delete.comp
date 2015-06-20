@@ -1,0 +1,6 @@
+<%args>
+	$id
+</%args>
+<%init>
+	$dbh->do("DELETE FROM tokens WHERE id = ?", undef, $id);
+</%init>

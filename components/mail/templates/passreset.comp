@@ -1,0 +1,20 @@
+<%args>
+	$domain
+	$username
+	$token
+</%args>
+A password reset email has been requested.
+
+Here are your domain and username:
+
+	domain: <% $domain %>
+	username: <% $username %>
+
+Please click on the following link to reset your account:
+
+	<% $config{baseurl} %>/passreset.html?token=<% $token |u %>
+
+If you don't have requested such action, please ignore this message.
+
+	The PandAP bot
+	<% $config{baseurl} %>/about.html

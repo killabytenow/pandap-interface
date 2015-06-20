@@ -1,0 +1,33 @@
+<%args>
+	$domain
+	$email
+</%args>
+<%init>
+	# fetch domain and check
+	my $d = $m->comp("/domain/get.comp", name => $domain);
+
+	# add user
+	my $u = $m->comp("/user/get.comp",
+			domain_id => $d->{id},
+			email     => $email);
+
+	# create token
+	my $token = $m->comp("/token/new.comp",
+				domain_id  => $d->{id},
+				username   => $u->{name},
+				one_time   => 1,
+				pass_reset => 1);
+
+	# send email
+	$m->comp("/mail/send.comp",
+			from => $config{robotmailer},
+			mail => $m->comp("/mail/plain.comp",
+					from    => $config{robotmailer},
+					replyto => $config{postmaster},
+					to      => $email,
+					subject => "[PandAP $domain] password reset",
+					txt     => $m->scomp("/mail/templates/passreset.comp",
+							domain   => $domain,
+							username => $u->{name},
+							token    => $token)));
+</%init>

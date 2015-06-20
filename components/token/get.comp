@@ -1,0 +1,15 @@
+<%args>
+	$id
+</%args>
+<%init>
+	my ($sth, $t);
+
+	$sth = $dbh->prepare(q{ SELECT * FROM tokens WHERE id = ? });
+	$sth->execute($id);
+
+	$t = $sth->fetchrow_hashref;
+	Pandap::TokenException->throw("Bad token")
+		if(!$t);
+
+	return $t;
+</%init>

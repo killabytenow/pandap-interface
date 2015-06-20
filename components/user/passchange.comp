@@ -1,0 +1,19 @@
+<%args>
+	$domain_id
+	$username
+	$password
+</%args>
+<%init>
+	$dbh->do(q{
+			UPDATE users
+			SET password = ?
+			WHERE domain_id = ? AND name = ?
+		}, undef,
+		defined($password)
+			? $m->comp("/user/passhash.comp",
+				domain_id => $domain_id,
+				username  => $username,
+				password  => $password)
+			: undef,
+		$domain_id, $username);
+</%init>

@@ -1,0 +1,34 @@
+<%args>
+	$domain_id
+	$username
+	$op
+	$np
+</%args>
+<%init>
+	my ($u, $h);
+
+	$u = $m->comp("/user/get.comp",
+			domain_id => $domain_id,
+			username  => $username);
+
+	if($u->{password}) {
+		$h = $m->comp("/user/passhash.comp",
+					domain_id => $domain_id,
+					username  => $username,
+					password  => $op);
+
+		if($u->{password} ne $h) {
+			$dbh->rollback;
+			$m->comp("/user/badtry.comp",
+					domain_id => $domain_id,
+					username => $username);
+			$dbh->commit;
+			Pandap::UserException->throw("Bad old password.")
+		}
+	}
+
+	$m->comp("/user/passchange.comp",
+			domain_id => $domain_id,
+			username  => $username,
+			password  => $np);
+</%init>
