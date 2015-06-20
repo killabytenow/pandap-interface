@@ -4,7 +4,7 @@
 </%args>
 <%init>
 	open(SM, "|-", "/usr/sbin/sendmail", "-t", "-f", $from)
-		or die { code => 1, msg => "Cannot execute sendmail: $!" };
+		or Pandap::MailException->throw(error => "Cannot execute sendmail: $!");
 
 	print SM (ref($mail) eq 'MIME::Entity'
 			? $mail->stringify
