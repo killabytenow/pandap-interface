@@ -1,0 +1,71 @@
+<%doc>
+-------------------------------------------------------------------------------
+method login
+-------------------------------------------------------------------------------
+</%doc>
+<%method login>
+	<%attr>
+		restricted => 0
+	</%attr>
+	<%args>
+		$ret
+		$domain
+		$username
+		$password
+	</%args>
+	<%init>
+		$m->comp("/session/login.comp",
+				domain   => $domain,
+				username => $username,
+				password => $password,
+				session  => 0);
+	</%init>
+</%method>
+<%method logout>
+  <%attr>
+    public  => 1
+  </%attr>
+  <%args>
+    $ret
+    $file_id
+    $from
+  </%args>
+  <%init>
+	my ($cookie);
+
+
+
+	eval {
+		delete $session{logged};
+		delete $session{username};
+	my $cookie = Apache2::Cookie->new($r,
+			-name     => 'PA_ID',
+			-value    => $HTML::Mason::Commands::session{_session_id},
+			-path     => '/',
+			#-httponly => 1,
+		);
+	$cookie->bake($r);
+    eval {
+      $from = int($from);
+
+      $sth = $dbh->prepare("SELECT *, "
+                         . "to_char(tstamp, 'DD/MM/YYYY HH24:MI') AS tstamp_str"
+                         . " FROM ano_comments WHERE file_id = ? AND comment_id >= ?");
+      $sth->execute($file_id, $from);
+
+      $ret->{comments} = [];
+      while($c = $sth->fetchrow_hashref)
+      {
+        push(@{$ret->{comments}}, $c);
+      }
+      $ret->{errmsg} = "Everything is alright.";
+      $dbh->commit;
+    };
+    if($@)
+    {
+      $ret->{errnum} = 1000;
+      $ret->{errmsg} = "Error creating comment. Fatal error: $@";
+      eval { $dbh->rollback; };
+    }
+  </%init>
+</%method>

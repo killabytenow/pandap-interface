@@ -1,0 +1,67 @@
+<%method title><%init>return "The server made a boo boo";</%init></%method>
+<h1 style="color:red">Error!</h1>
+<div style="margin-left:20px">
+  <p>
+    Internal error in component:
+    <i><% $r->uri |h %></i>
+  </p>
+  <pre><% $errtxt |h %></pre>
+<%init>
+	my ( $errtxt, $sres, $rres );
+
+	$errtxt = $r->pnotes('error');
+
+	# convert to text
+	$errtxt = UNIVERSAL::can($errtxt, 'as_text')
+			? $errtxt->as_text
+			: $errtxt;
+	if($errtxt && ref($errtxt) && ref($errtxt) eq 'APR::Error') {
+		$errtxt = APR::Error::strerror($errtxt);
+	}
+
+	$r->log_error("booboo.html:error:$errtxt");
+
+#    # Si no estamos en modo de desarrollo, empaquetamos el error en un mail y
+#    # lo enviamos al administrador de la web.
+#    if($errtxt !~ /Software caused connection abort/)
+#    {
+#      if(!$webcfg{devel})
+#      {
+#        # Creamos un resource para el mail con la info de sesión
+#         ($error, $sres) = $m->comp("/mhtml/addresource.comp",
+#                                      cid     => "sessdesc",
+#                                      fname   => "sessdesc.txt",
+#                                      data    => $m->comp("/gsessions/getsessiondesc.comp"),
+#                                      charset => "ISO-8859-1",
+#                                      type    => "text/plain");
+#         die $error if(int($error) != 0);
+#
+#        # Creamos un resource para el mail con el error
+#        ($error, $rres) = $m->comp("/mhtml/addresource.comp",
+#                                     cid     => "rawerror",
+#                                     fname   => "rawerror.txt",
+#                                     data    => $errtxt,
+#                                     charset => "ISO-8859-1",
+#                                     type    => "text/plain");
+#        die $error if(int($error) != 0);
+#
+#        # Creamos el mail con el error
+#        $error = $m->comp("/mailerror.comp",
+#                            subj => "Mason Error",
+#                            res  => [ $rres, $sres ],
+#                            desc => ($session{idioma}
+#                                      ? "El componente '"
+#                                      : "El component '")
+#                                    . $m->interp->apply_escapes($r->uri, "h")
+#                                    . ($session{idioma}
+#                                        ? "' termino su ejecución inesperadamente."
+#                                        : "' va acabar la seva execució inesperadament."));
+#        die $error if(int($error) != 0);
+#      }
+#    } else {
+#      warn "/Software caused connection abort/";
+#    }
+#  };
+#
+#  $error = "1000; booboo.html; error='$@'" if($@ && int($error) == 0);
+</%init>

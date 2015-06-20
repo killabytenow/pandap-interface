@@ -1,0 +1,8 @@
+<html>
+  <head>
+    <title><% $m->comp("SELF:title") |h %></title>
+  </head>
+  <body>
+% $m->call_next;
+  </body>
+</html>

@@ -1,0 +1,125 @@
+<%doc>
+###############################################################################
+# /json/ autohandler
+#
+# JSON interface through HTTP
+#
+# -----------------------------------------------------------------------------
+# Ano.lolcathost.org web page source code
+#   (C) 2009-2011 Gerardo Garcia Pen~a (killabytenow@gmail.com)
+#   Programmed by Gerardo Garcia Pen~a (killabytenow@gmail.com)
+###############################################################################
+</%doc>
+<%attr>
+	restricted => 1
+</%attr>
+<%init>
+	my ($headers_in, $c, $buffer, $jsonstr, $comp, $method, $mc, $req, %ret);
+
+	sub fix_strings
+	{
+		my ($obj) = @_;
+		my ($t, $i);
+		$t = Scalar::Util::reftype($obj);
+
+		# ignore undef values
+		return undef if(!defined($obj));
+
+		# decode utf-8 strings
+		return Encode::encode("utf8", Encode::decode("utf8", $obj), Encode::FB_QUIET) if(!defined($t));
+
+		# process special data types
+		if($t eq "REF") {
+			${$obj} = fix_strings($$obj);
+		} elsif($t eq "ARRAY") {
+			for($i = 0; $i < scalar(@{$obj}); $i++) {
+				$obj->[$i] = fix_strings($obj->[$i]);
+			}
+		} elsif($t eq "HASH") {
+			foreach $i (keys %{$obj}) {
+				$obj->{$i} = fix_strings($obj->{$i});
+			}
+		} else {
+			die "Cannot fix this JSON object ($t = $obj).";
+		}
+		return $obj;
+	}
+
+	# call component
+	eval {
+		# check for json input
+		$headers_in = $r->headers_in();
+		if(defined($headers_in->{"Content-Type"})
+		&& $headers_in->{"Content-Type"} =~ /^application\/json(?:;.*)?$/i) {
+			# read json input
+			$jsonstr = "";
+			$jsonstr .= $buffer while(($c = $r->read($buffer, 10)) > 0);
+
+			# parse input json string
+			$req = from_json($jsonstr);
+
+			# parse strings!
+			fix_strings($req);
+		} else {
+			$req = { %ARGS };
+		}
+
+		# prepare the default response from the most optimistic point of view
+		$ret{errnum} = 0;
+		$ret{errmsg} = undef;
+
+		# fetch final component, check method and call it
+		$comp = $m->fetch_next_all;
+		die { code => 1000, msg  => "Method not specified." }
+			if(!defined($req->{method}));
+		$method = $req->{method};
+		$mc = $comp->methods($method);
+		delete $req->{method};
+
+		# check method can be accessed
+		die { code => 2000, msg => "Method '$method' does not exist." }
+			if(!defined($mc));
+
+		# check if method requires login
+		die { code => 3000, msg => "Needs auth modafucka." }
+			if(!$session{logged}
+			&& (!$mc->attr_exists("restricted") || $mc->attr("restricted")));
+
+		if(!$session{admin}) {
+			$domain_id = $session{domain_id};
+			$user_id = $session{user_id};
+		}
+
+		# check special permissions
+		die { code => 9000, msg => "You are not allowed to do this." }
+			if($mc->attr_exists("admin") && !$session{admin});
+
+		# call method
+		$comp->call_method($method, ret => \%ret, %{$req});
+
+		$dbh->commit;
+
+		1;
+	} or do {
+		my $e = $@;
+
+		eval { $dbh->rollback; };
+
+		$ret = ();
+		if(ref($e) ne "HASH") {
+			$ret{errnum} = 9001;
+			$ret{errmsg} = "Error calling component. Fatal error: $e.";
+		} else {
+			$ret{errnum} = $e->{code};
+			$ret{errmsg} = $e->{msg};
+		}
+	};
+
+	# print result
+	# $m->clear_buffer;
+	$r->content_type("application/json; charset=utf-8");
+	#fix_strings(\%ret);
+	$m->out(to_json(\%ret));
+
+	return;
+</%init>
