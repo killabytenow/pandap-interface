@@ -11,9 +11,10 @@
 
 BEGIN;
 
+DROP TABLE sessions;
+DROP TABLE tokens;
 DROP TABLE devices;
 DROP TABLE users;
 DROP TABLE domains;
-DROP TABLE sessions;
 
 COMMIT;

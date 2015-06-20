@@ -25,10 +25,15 @@ CREATE TABLE domains (
 
     -- users config
     closed_list   BOOLEAN NOT NULL DEFAULT TRUE,
-    name_is_email BOOLEAN NOT NULL DEFAULT TRUE,
 
     tstamp        TIMESTAMP NOT NULL DEFAULT now()
 );
+insert into domains (name, description, valid_since, valid_until)
+	VALUES (
+		'scg15',
+		'Summer Camp Garrotxa 2015',
+		now(),
+		date '2015-07-15');
 --CREATE INDEX domains_tstamp ON ano_files (tstamp);
 
 -- USERS ----------------------------------------------------------------------
@@ -38,9 +43,10 @@ CREATE TABLE users (
 
     email       TEXT NOT NULL,
 
-    password    VARCHAR(64),
+    password    VARCHAR(64) DEFAULT NULL,
     blocked     BOOLEAN DEFAULT FALSE,
     ulevel      INTEGER NOT NULL DEFAULT 0,
+    badtries	INTEGER NOT NULL DEFAULT 0,
     	-- ulevel 0 => only modifies personal data
 	-- ulevel 1 => only modifies general data in domain
 	-- ulevel 2 => only modifies privileged data in domain
@@ -49,7 +55,8 @@ CREATE TABLE users (
     radius      TEXT NOT NULL DEFAULT '{ }',
     tstamp      TIMESTAMP NOT NULL DEFAULT now(),
 
-    CONSTRAINT users_pkey PRIMARY KEY (domain_id, name)
+    CONSTRAINT users_pkey PRIMARY KEY (domain_id, name),
+    CONSTRAINT users_unique_email UNIQUE (domain_id, email)
 );
 --CREATE INDEX users_name_index ON users (name);
 --CREATE INDEX users_email_index ON users (email);
@@ -97,9 +104,11 @@ CREATE TRIGGER sessions_mod_trigger
 	BEFORE UPDATE ON sessions FOR EACH ROW EXECUTE PROCEDURE sessions_mod();
 
 CREATE TABLE tokens (
-	id		CHARACTER(32) NOT NULL PRIMARY KEY,
+	id		CHARACTER(64) NOT NULL PRIMARY KEY,
 	domain_id	INTEGER NOT NULL REFERENCES domains(id),
 	user_name	VARCHAR(32) NOT NULL UNIQUE,
+	one_time	BOOLEAN NOT NULL DEFAULT TRUE,
+	pass_reset	BOOLEAN NOT NULL DEFAULT FALSE,
 
 	FOREIGN KEY (domain_id, user_name) REFERENCES users(domain_id, name) ON DELETE CASCADE
 );

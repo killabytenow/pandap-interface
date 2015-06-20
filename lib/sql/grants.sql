@@ -1,6 +1,7 @@
 BEGIN;
 
 GRANT SELECT,INSERT,UPDATE,DELETE ON sessions       TO "www-data";
+GRANT SELECT,INSERT,UPDATE,DELETE ON tokens         TO "www-data";
 GRANT SELECT,INSERT,UPDATE,DELETE ON domains        TO "www-data";
 GRANT SELECT,UPDATE               ON domains_id_seq TO "www-data";
 GRANT SELECT,INSERT,UPDATE,DELETE ON users          TO "www-data";
