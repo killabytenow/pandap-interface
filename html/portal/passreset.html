@@ -1,0 +1,14 @@
+<%attr>
+	public => 1
+</%attr>
+<%args>
+	$token
+</%args>
+<%init>
+	# init session using token
+	$m->comp("/session/login.comp",
+			token   => $token,
+			session => 1);
+	
+	$m->redirect("/portal/passchange.html");
+</%init>

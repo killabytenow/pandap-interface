@@ -1,0 +1,27 @@
+<%attr>
+	public => 1
+</%attr>
+<%method title>Register email sent</%method>
+<%method onerror>
+<%args>
+	$e
+</%args>
+	<h3 style="color: red">bad credentials</h3>
+	<p>
+		Error when recovering credentials.
+	</p>
+	<pre><% $e->{message} |h %></pre>
+	<a href="login.html" data-role="button">Go to login page</a> 
+</%method>
+<%args>
+	$d
+	$e
+</%args>
+<div>
+	<& /case/forget.comp,
+		domain   => $d,
+		email    => $e &>
+	<p>
+		A username and password recovery email has been sent to your email account.
+	</p>
+</div>

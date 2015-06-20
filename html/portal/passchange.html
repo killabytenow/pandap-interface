@@ -1,0 +1,53 @@
+<%method title>Change password</%method>
+<%args>
+	$op => undef
+	$np => undef
+</%args>
+% if(!$np) {
+	<h3><% $u->{passwd} ? "Password change" : "Set password" |h %></h3>
+	<p>
+%	if($u->{passwd}) {
+		Insert your old and new password (twice for confirmation
+		purposes).
+%	} else {
+		Insert your new password (twice for confirmation purposes).
+%	}
+	</p>
+	<div>
+		<form action="/portal/passchange.html" method="post">
+%			if($u->{passwd}) {
+			Old password:      <input type="password" name="op"  /><br/>
+%			}
+			New password:      <input type="password" name="np"  /><br/>
+			New pasword again: <input type="password" name="np2" /><br/>
+			<p>
+				<input type="submit" value="recover" />
+			</p>
+		</form>
+	</div>
+% } else {
+	<h3>Your password has been changed</h3>
+	<p>
+		Your password has been changed succesfully.
+	</p><p>
+		This session will be kept open, so you can go directly to your
+		private area, but in the future you will can log in with your
+		password.
+	</p><p>
+		Additionally an email has been sent for inform and remember you
+		that the password has been changed.
+	</p>
+	<a href="/portal/private.html" data-role="button">Go to your private area</a> 
+% }
+<%init>
+	my $u = $m->comp("/user/get.comp",
+			domain_id => $session{domain_id},
+			username  => $session{username});
+
+	$m->comp("/case/passchange.comp",
+			domain_id => $session{domain_id},
+			username  => $session{username},
+			op        => $op,
+			np        => $np)
+		if($np);
+</%init>

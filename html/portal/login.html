@@ -1,0 +1,87 @@
+<%attr>
+	public => 1
+</%attr>
+<%method title>Login and register</%method>
+<%args>
+	$d => undef
+	$u => undef
+	$p => undef
+</%args>
+<div data-role="collapsibleset" data-theme="a" data-content-theme="a">
+  <div data-role="collapsible" data-collapsed="false">
+    <h4>Login</h4>
+    <form action="/portal/login.html" method="post">
+      domain:   <input type="text"     name="d" value="<% defined($d) ? $d : "" |h %>"/><br/>
+      username: <input type="text"     name="u" value="<% defined($u) ? $u : "" |h %>"/><br/>
+      password: <input type="password" name="p" /><br/>
+%     if($badlogin) {
+      <h3 style="color: red">bad credentials</h3>
+%     }
+      <p>
+        <input type="submit" value="login" />
+      </p>
+    </form>
+  </div>
+  <div data-role="collapsible">
+    <h4>Forget username and/or password</h4>
+    <form action="/portal/forget.html" method="post">
+      domain:   <input type="text"     name="d" value="<% defined($d) ? $d : "" |h %>"/><br/>
+      email:    <input type="text"     name="e" value=""/><br/>
+      <p>
+        <input type="submit" value="recover" />
+      </p>
+    </form>
+  </div>
+  <div data-role="collapsible">
+    <h4>Register</h4>
+    <form action="/portal/register.html" method="post">
+      domain:   <input type="text"     name="d" value="<% defined($d) ? $d : "" |h %>"/><br/>
+      email:    <input type="text"     name="e" value=""/><br/>
+      username: <input type="text"     name="u" value=""/><br/>
+      <p>
+        <input type="submit" value="register" />
+      </p>
+    </form>
+  </div>
+</div>
+<h1>Login</h1>
+<pre>
+----------------------------------------
+method:   [<% $r->method |h %>]
+username: [<% $u |h %>]
+password: [<% $p |h %>]
+badlogin: [<% $badlogin |h %>]
+----------------------------------------
+</pre>
+<%init>
+	my $badlogin;
+
+	if($session{logged}) {
+		$m->redirect("/portal/index.html");
+		return;
+	}
+
+	if(defined($d) || defined($u) || defined($p)) {
+		if($r->method ne "POST") {
+			$m->clear_buffer;
+			$m->abort(405);
+		}
+
+		eval {
+			$m->comp("/session/login.comp",
+					domain   => $d,
+					username => $u,
+					password => $p,
+					session  => 1);
+			$m->redirect("/portal/index.html");
+			1;
+		} or do {
+			my $e = $@;
+			die $e if(!ref($e) || !$e->isa("Pandap::SessionException"));
+			logerr("Bad login (%s): %s", ref($e), $e->{message});
+			$badlogin = defined($d)
+					|| defined($u)
+					|| defined($p);
+		};
+	}
+</%init>

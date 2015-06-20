@@ -1,0 +1,31 @@
+<%attr>
+	public => 1
+</%attr>
+<%args>
+	$d
+	$u
+	$e
+</%args>
+<%method title>Register email sent</%method>
+<%method onerror>
+<%args>
+	$e
+</%args>
+	<h3 style="color: red">bad credentials</h3>
+	<p>
+		Error when preparing your register:
+	</p>
+	<pre><% $e->{msg} |h %></pre>
+	<a href="login.html" data-role="button">Go to login page</a> 
+</%method>
+<div>
+	<& /case/register.comp,
+		domain   => $d,
+		username => $u,
+		email    => $e &>
+	<p>
+		A confirmation mail has been sent to your email account at <% $e |h %>.
+	</p><p>
+		Please note that you have 24 hours to confirm your account.
+	</p>
+</div>

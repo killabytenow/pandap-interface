@@ -1,0 +1,68 @@
+<%method title>Pandap</%method>
+<%method onerror>
+<%args>
+	$e
+</%args>
+<h1>Exceution error</h1>
+<h3 style="color: red"><% $e->{message} |h %></h3>
+<div data-role="collapsible" data-collapsed="false">
+  <h4>Details</h4>
+<%perl>
+	$m->out("<pre>\n");
+	foreach my $t (@{$e->{trace}->{raw}}) {
+		next if(
+			grep({ $t->{caller}->[0] eq $_ }
+					"main",
+					"HTML::Mason::ApacheHandler",
+					"HTML::Mason::Request",
+					"HTML::Mason::Request::ApacheHandler",
+					@{$e->{trace}->{ignore_class}}
+				));
+		$m->out($m->interp->apply_escapes(
+				sprintf("%s:%d: calling %s(%s)\n",
+					$t->{caller}->[1],
+					$t->{caller}->[2],
+					$t->{caller}->[3],
+					join(", ",
+						Data::Dumper->new($t->{args})->Terse(1)->Indent(0)->Dump
+						)),
+				"h"));
+	}
+	$m->out("</pre>\n");
+</%perl>
+</div>
+</%method>
+<%init>
+	my ($self, $template);
+
+	$self = $m->fetch_next_all;
+	#$ua = $r->headers_in->get("User-Agent");
+
+	$m->redirect("/portal/login.html")
+		if(!$session{logged} && !$self->attr_if_exists("public"));
+
+	eval {
+		$m->comp("/template.comp:header",
+				title => $m->scomp("SELF:title"));
+		$m->call_next;
+		$m->comp("/template.comp:footer");
+
+		$dbh->commit;
+		1;
+	} or do {
+		my $e = $@;
+
+		if($e->isa("Pandap::Exception")) {
+			eval { $dbh->rollback; };
+			$m->comp("SELF:onerror", e => $e);
+		} else {
+			if($e->isa("HTML::Mason::Exception::Abort")
+			&& ($e->{aborted_value} == 301 || $e->{aborted_value} == 302)) {
+				eval { $dbh->commit; };
+			} else {
+				eval { $dbh->rollback; };
+			}
+			die $e;
+		}
+	};
+</%init>
