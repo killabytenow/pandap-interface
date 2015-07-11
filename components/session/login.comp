@@ -107,6 +107,7 @@
 
 	# update session info
 	$session{logged}    = 1;
+	$session{ulevel}    = $u->{ulevel};
 	$session{domain_id} = $d->{id};
 	$session{domain}    = $d->{name};
 	$session{username}  = $u->{name};

@@ -1,6 +1,6 @@
 BEGIN;
 
---CREATE USER "anomail";
---GRANT CONNECT ON DATABASE "www-data" TO "anomail";
+CREATE USER "radius";
+GRANT CONNECT ON DATABASE "pandap" TO "radius";
 
 COMMIT;

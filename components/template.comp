@@ -1,6 +1,17 @@
+<%method index_link>
+<%args>
+  $url
+  $text
+  $style => undef
+</%args>
+% my $l = $r->uri;
+% $l =~ s/([a-zA-Z0-9\-]+~~)+//;
+<a href="<% $url |h %>"><span style="<% ($style ? "$style;" : "")
+                                      . ($l eq $url ? "color:green" : "") |h %>"><% $text |h %></span></a>
+</%method>
 <%method header>
 <%args>
-	$title
+  $title
 </%args>
 <!DOCTYPE html>
 <html>
@@ -29,6 +40,64 @@
 %#      <a href="#" class="ui-btn ui-btn-icon-notext ui-corner-all ui-icon-bars ui-nodisc-icon ui-alt-icon">Menu</a>
 %#      <a href="#" class="jqm-search-link ui-btn ui-btn-icon-notext ui-corner-all ui-icon-search ui-nodisc-icon ui-alt-icon ui-btn-right">Search</a>
       </div><!-- /header -->
+
+      <div id="nav-panel"
+           class="ui-responsive-panel jqm-navmenu-panel"
+           data-role="panel"
+           data-display="overlay"
+           data-theme="a"
+           data-position-fixed="true"
+           data-dismisible="false">
+        <ul data-role="listview" class="ui-listview-outer jqm-list ui-alt-icon ui-nodisc-icon">
+          <li data-icon="home"><& SELF:index_link, url => "/index.html", text => "Inicio" &></li>
+          <li data-icon="home"><& SELF:index_link, url => "/about.html", text => "Acerca de..." &></li>
+
+%         if($session{logged}) {
+          <li data-role="collapsible"
+              data-collapsed="false"
+              data-collapsed-icon="carat-d"
+              data-expanded-icon="carat-u"
+              data-iconpos="right"
+              data-inset="false">
+            <h2>Usuario</h2>
+            <ul data-role="listview" data-theme="b">
+              <li data-icon="home"><& SELF:index_link, url => "/personal.html", text => "Datos personales" &></li>
+              <li data-icon="home"><& SELF:index_link, url => "/devices.html",  text => "Dispositivos" &></li>
+            </ul>
+          </li>
+%         }
+
+%         if($session{ulevel} >= 1) {
+          <li data-role="collapsible"
+              data-collapsed="false"
+              data-collapsed-icon="carat-d"
+              data-expanded-icon="carat-u"
+              data-iconpos="right"
+              data-inset="false">
+            <h2>Dominio <i><% $session{domain} |h %></i></h2>
+            <ul data-role="listview" data-theme="b">
+              <li data-icon="home"><& SELF:index_link, url => "/dprops.html", text => "Configuración" &></li>
+              <li data-icon="home"><& SELF:index_link, url => "/dusers.html", text => "Usuarios" &></li>
+            </ul>
+          </li>
+%         }
+
+%         if($session{ulevel} >= 3) {
+          <li data-role="collapsible"
+              data-collapsed="false"
+              data-collapsed-icon="carat-d"
+              data-expanded-icon="carat-u"
+              data-iconpos="right"
+              data-inset="false">
+            <h2>Configuración global</h2>
+            <ul data-role="listview" data-theme="b">
+              <li data-icon="home"><& SELF:index_link, url => "/pnas.html", text => "Network Access Server" &></li>
+            </ul>
+          </li>
+%         }
+
+        </ul>
+      </div>
 
       <div role="main" class="ui-content jqm-content jqm-fullwidth">
 </%method>
